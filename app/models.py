@@ -11,6 +11,8 @@ class Job(db.Model):
   match_score = db.Column(db.Float, nullable=False, default=0.0)
   status = db.Column(db.Enum(JobStatus), nullable=False, default=JobStatus.PENDING)
   date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+  stacks = db.Column(db.String(255), nullable=True)
+  feedback = db.Column(db.Text)
 
   def __repr__(self):
     return f'<Job {self.title} - score: {self.match_score} - status: {self.status.value}>'
