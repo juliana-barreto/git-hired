@@ -40,6 +40,32 @@ def get_jobs():
 
     return jsonify(result)
 
+@app.route('/jobs', methods=['POST'])
+def add_job():
+  # Parse request body
+  data = request.get_json()
+
+  # Validate required fields
+  required_fields = ['title', 'company', 'description', 'url']
+  for field in required_fields:
+    if field not in data:
+      return jsonify({'error': f'{field} is required'}), 400 
+  
+  # Create and persist new job entry
+  new_job = Job(
+    title=data['title'],
+    company=data['company'],
+    description=data['description'],
+    url=data['url'],
+    match_score=data.get('match_score', 0.0),
+    stacks=','.join(data.get('stacks', []))
+  ) 
+  db.session.add(new_job)
+  db.session.commit()
+
+  return jsonify({'message': 'Job added successfully', 'job_id': new_job.id}), 201
+
+
 
 @app.route('/jobs/<int:job_id>', methods=['GET'])
 def get_job(job_id):
