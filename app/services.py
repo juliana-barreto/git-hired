@@ -10,8 +10,9 @@ TARGET_KEYWORDS = ['java', 'spring', 'spring boot', 'junior', 'estagio', 'backen
 
 # Function to calculate match score based on keyword presence
 def calculate_match_score(title, description):
-    # Initialize the score
+    # Initialize the score and a list to track which keywords were found
     score = 0.0
+    found_stacks = []
     
     # Combine title and description and convert to lowercase for easier matching
     full_text = f"{title} {description}".lower()
@@ -20,7 +21,10 @@ def calculate_match_score(title, description):
     for keyword in TARGET_KEYWORDS:
         if keyword in full_text:
             score += 100.0 / len(TARGET_KEYWORDS)
-    return min(score, 100.0)
+            found_stacks.append(keyword)
+
+    # Return the final score and the list of found stacks
+    return min(score, 100.0), found_stacks
 
 # Function to save a job to the database
 def save_job_to_db(job_data):
@@ -32,7 +36,7 @@ def save_job_to_db(job_data):
       return False, f'{field} is required'
 
   # Calculate the strategic match score
-  score = calculate_match_score(job_data.get('title', ''), job_data.get('description', ''))
+  score, found_stacks = calculate_match_score(job_data.get('title', ''), job_data.get('description', ''))
   
   # Instantiate the Job model
   new_job = Job(
@@ -42,8 +46,9 @@ def save_job_to_db(job_data):
       url=job_data.get('url'),
       match_score=score,
       status=JobStatus.PENDING,
+      location=job_data.get('location'),
       date=job_data.get('date'),
-      stacks=','.join(job_data.get('stacks', []))
+      stacks=','.join(found_stacks)
   )
   
   try:
@@ -53,6 +58,5 @@ def save_job_to_db(job_data):
       return True, new_job
   except IntegrityError:
       # If the URL already exists, MySQL will throw an IntegrityError
-      # We must rollback the session so the script doesn't crash
       db.session.rollback()
       return False, "Job URL already exists"
