@@ -1,5 +1,5 @@
 from flask import jsonify, request, render_template
-from flask import current_app as app
+from . import app
 from .models import Job
 from .database import db
 from .services import save_job_to_db
@@ -35,6 +35,7 @@ def get_jobs():
         'match_score': job.match_score,
         'status': job.status.value,
         'stacks': job.stacks.split(',') if job.stacks else [],
+        'location': job.location,
         'date': job.date.isoformat()
     } for job in jobs]
 
@@ -68,6 +69,7 @@ def get_job(job_id):
         'url': job.url,
         'match_score': job.match_score,
         'feedback': job.feedback,
+        'location': job.location,
         'date': job.date.isoformat()
     }
 
