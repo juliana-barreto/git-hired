@@ -2,7 +2,7 @@ from flask import jsonify, request, render_template
 from flask import current_app as app
 from .models import Job
 from .database import db
-
+from .services import save_job_to_db
 
 # Home page route
 @app.route('/')
@@ -23,7 +23,7 @@ def get_jobs():
     # Apply filters based on available query parameters
     if target_status:
         query = query.filter_by(status=target_status)
-    elif target_stack:
+    if target_stack:
         query = query.filter(Job.stacks.contains(target_stack))
 
     # Execute query and serialize response
@@ -44,27 +44,14 @@ def get_jobs():
 def add_job():
   # Parse request body
   data = request.get_json()
-
-  # Validate required fields
-  required_fields = ['title', 'company', 'description', 'url']
-  for field in required_fields:
-    if field not in data:
-      return jsonify({'error': f'{field} is required'}), 400 
+  success, result = save_job_to_db(data)
   
-  # Create and persist new job entry
-  new_job = Job(
-    title=data['title'],
-    company=data['company'],
-    description=data['description'],
-    url=data['url'],
-    match_score=data.get('match_score', 0.0),
-    stacks=','.join(data.get('stacks', []))
-  ) 
-  db.session.add(new_job)
-  db.session.commit()
-
-  return jsonify({'message': 'Job added successfully', 'job_id': new_job.id}), 201
-
+  if success:
+    # result is the new_job object
+    return jsonify({'message': 'Job created', 'id': result.id}), 201
+  else:
+    # result is the error message string
+    return jsonify({'error': result}), 409 
 
 
 @app.route('/jobs/<int:job_id>', methods=['GET'])
