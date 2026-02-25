@@ -7,7 +7,7 @@ class Job(db.Model):
   title = db.Column(db.String(255), nullable=False)
   company = db.Column(db.String(255), nullable=False)
   description = db.Column(db.Text, nullable=False)
-  url = db.Column(db.String(255), nullable=False)
+  url = db.Column(db.String(255), nullable=False, unique=True)
   match_score = db.Column(db.Float, nullable=False, default=0.0)
   status = db.Column(db.Enum(JobStatus), nullable=False, default=JobStatus.PENDING)
   date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
