@@ -1,11 +1,11 @@
 import asyncio
-from playwright.async_api import async_playwright
+from playwright.sync_api import sync_playwright
 
 async def intercept_gupy_api(response, extracted_jobs):
   # Search for the specific Gupy API endpoint in the network traffic
   if "/jobs?jobName=" in response.url and response.status == 200:
     try:
-      data = await response.json()
+      data = response.json()
         
       # Navigate through the JSON structure found in the Gupy API response and extract relevant job details
       for job in data.get('data', []):
@@ -38,23 +38,23 @@ async def scrape_gupy(keyword):
     
     extracted_jobs = []
     
-    # tart the Playwright async engine
-    async with async_playwright() as p:
+    # Use Playwright to launch a headless browser and navigate to the Gupy job search page with the specified keyword
+    with sync_playwright() as playwright:
         # Keep headless=True for production, set to False for debugging to see the browser in action
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
         
         # Attach our spy listener to the network responses
         page.on("response", lambda response: intercept_gupy_api(response, extracted_jobs))
         
         # Navigate to the Gupy portal with your specific keyword
         search_url = f"https://portal.gupy.io/job-search/term={keyword}"
-        await page.goto(search_url)
+        page.goto(search_url)
         
         # Wait a few seconds for the JavaScript to load and the API to respond
-        await page.wait_for_timeout(5000) 
+        page.wait_for_timeout(5000) 
         
         # Close the browser
-        await browser.close()
+        browser.close()
         
     return extracted_jobs
