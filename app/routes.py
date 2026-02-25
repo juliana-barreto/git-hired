@@ -27,7 +27,7 @@ def get_jobs():
         query = query.filter(Job.stacks.contains(target_stack))
 
     # Execute query and serialize response
-    jobs = query.all()
+    jobs = query.order_by(Job.match_score.desc()).all()
 
     result = [{
         'id': job.id,
