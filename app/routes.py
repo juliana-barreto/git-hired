@@ -1,4 +1,6 @@
 from flask import jsonify, request, render_template
+
+from app.enums import JobStatus
 from . import app
 from .models import Job
 from .database import db
@@ -88,8 +90,13 @@ def update_job_status(job_id):
     if not new_status:
         return jsonify({'error': 'Status is required'}), 400
 
+    try:
+        # Convert the string received from frontend into the Enum object
+        job.status = JobStatus(new_status)
+    except ValueError:
+        return jsonify({'error': 'Invalid status value'}), 400
+    
     # Persist status update
-    job.status = new_status
     db.session.commit()
 
     return jsonify({'message': 'Job status updated successfully'}), 200
