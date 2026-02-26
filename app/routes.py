@@ -7,8 +7,10 @@ from .services import save_job_to_db
 # Home page route
 @app.route('/')
 def index():
+    # Fetch all jobs from the database
+    jobs = Job.query.order_by(Job.match_score.desc()).all()
     # Render the main dashboard template
-    return render_template('index.html')
+    return render_template('index.html', jobs=jobs)
 
 
 @app.route('/jobs', methods=['GET'])
